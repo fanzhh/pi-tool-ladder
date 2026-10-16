@@ -1,0 +1,59 @@
+{
+  "budget": {
+    "maxTools": 12,
+    "maxSchemaChars": 14000,
+    "maxUnbucketed": 0
+  },
+  "alwaysOn": ["read"],
+  "controlTools": ["ladder_status", "ladder_mount"],
+  "router": {
+    "mode": "keyword",
+    "sticky": "session",
+    "classifyEndpoint": ""
+  },
+  "fallbackCategory": "general",
+  "logPath": ".pi-tool-ladder/log.jsonl",
+  "statePath": ".pi-tool-ladder/state.json",
+  "categories": [
+    {
+      "id": "fs",
+      "label": "文件与代码",
+      "priority": 10,
+      "keywords": ["文件", "目录", "代码", "脚本", "读取", "编辑", "改写", "重构", "报错", "file", "code", "edit", "grep", "repo"],
+      "patterns": ["read", "write", "edit", "grep", "find_files", "glob", "ls", "bash", "fff_multi_grep", "js", "js_reset"],
+      "maxTools": 6
+    },
+    {
+      "id": "web",
+      "label": "联网检索",
+      "priority": 20,
+      "keywords": ["搜索", "搜一下", "联网", "网页", "链接", "网址", "url", "search", "web", "抓取", "下载网页"],
+      "patterns": ["web_search", "fetch_content", "get_search_content", "source_check"],
+      "maxTools": 5
+    },
+    {
+      "id": "mcp",
+      "label": "MCP 外部服务",
+      "priority": 30,
+      "keywords": ["mcp", "外部服务", "接口服务", "浏览器", "截图", "devtools"],
+      "patterns": ["mcp", "mcp_script"],
+      "maxTools": 3
+    },
+    {
+      "id": "agent",
+      "label": "子智能体与协作",
+      "priority": 40,
+      "keywords": ["子智能体", "委派", "并行", "分工", "subagent", "agent", "协作"],
+      "patterns": ["subagent*", "intercom", "contact_supervisor", "subagent_supervisor"],
+      "maxTools": 4
+    },
+    {
+      "id": "general",
+      "label": "通用兜底",
+      "priority": 90,
+      "keywords": [],
+      "patterns": ["bash", "read", "simplify_candidates", "code_smell_findings"],
+      "maxTools": 6
+    }
+  ]
+}
