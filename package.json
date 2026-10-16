@@ -1,11 +1,32 @@
 {
   "name": "pi-tool-ladder",
   "version": "0.1.0",
-  "private": true,
+  "description": "Keep Pi's tool schemas out of the prompt until they are actually needed: category -> subset -> on-demand mounting, under a hard tool/character budget. Built for running Pi agents on small local models.",
   "type": "module",
-  "description": "让 Pi 的工具/MCP/扩展无论增加多少，进提示词的永远是受预算约束的一小撮（分类→子集→按需挂载）",
+  "license": "MIT",
+  "author": "fanzhh",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fanzhh/pi-tool-ladder.git"
+  },
+  "homepage": "https://github.com/fanzhh/pi-tool-ladder",
+  "keywords": [
+    "pi",
+    "pi-coding-agent",
+    "agent",
+    "coding-agent",
+    "tools",
+    "prompt",
+    "context",
+    "local-llm",
+    "ollama",
+    "extension"
+  ],
   "scripts": {
-    "e2e": "bash e2e/run.sh"
+    "e2e": "bash e2e/run.sh",
+    "eval:offline": "node --experimental-strip-types eval/offline-eval.ts",
+    "eval:ab": "bash eval/ab-local.sh",
+    "eval:misroute": "bash eval/misroute.sh"
   },
   "dependencies": {
     "typebox": "^1.4.0"

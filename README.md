@@ -4,7 +4,7 @@
 
 ## 为什么需要它
 
-在本机实测（见 `knowledge1/01_AREAS/projects/active/local-ai-inference/2026-10-16-mini6-qwen3.8-27b-slim-pi-agent-vision-ocr-benchmark.md`）：
+在本机实测（32GB 统一内存的 Mac mini + 本地 27B 量化模型，32K 上下文窗口）：
 
 - 默认配置下 Pi 的活动工具 27–29 个，工具 schema **62,464 字符 ≈ 15,616 token**；
 - 加到本地 27B 模型上，提示词 27,217 token，单轮读入 143.5 秒（整进程 173 秒）；
@@ -31,10 +31,10 @@
 
 ```bash
 # 临时试用
-pi -e /Users/mac/projects/pi-tool-ladder/ladder/index.ts
+pi -e <仓库路径>/ladder/index.ts
 
 # 常驻：加进 ~/.pi/agent/settings.json 的 extensions 数组
-#   "extensions": ["+extensions/local-model/index.ts", "/Users/mac/projects/pi-tool-ladder/ladder/index.ts"]
+#   "extensions": ["+extensions/local-model/index.ts", "<仓库路径>/ladder/index.ts"]
 ```
 
 会话内：
