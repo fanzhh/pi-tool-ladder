@@ -224,16 +224,19 @@ export default function toolLadder(pi: ExtensionAPI): void {
     label: "Ladder mount",
     description:
       "按需挂载/卸下工具：action=list 列出全部可用工具；action=search 按关键词找；" +
-      "action=mount 挂载指定工具（可用逗号分隔多个）；action=unmount 卸下。",
+      "action=mount 挂载指定工具（可用逗号分隔多个）；action=unmount 卸下；" +
+      "action=category 切换整个工具类别（query 填类别 id，如 fs/web/mcp/agent/general）。" +
+      "注意：schema 超预算的工具挂不上，返回值会说明原因；不要重复重试同一动作。",
     parameters: Type.Object({
       action: Type.Union([
         Type.Literal("list"),
         Type.Literal("search"),
         Type.Literal("mount"),
         Type.Literal("unmount"),
+        Type.Literal("category"),
       ]),
       query: Type.Optional(
-        Type.String({ description: "search 的关键词，或 mount/unmount 的工具名（逗号分隔）" }),
+        Type.String({ description: "search 的关键词，mount/unmount 的工具名（逗号分隔），或 category 的类别 id" }),
       ),
     }),
     async execute(_id, params) {
@@ -276,9 +279,28 @@ export default function toolLadder(pi: ExtensionAPI): void {
         };
       }
 
+      if (action === "category") {
+        const id = (query ?? "").trim();
+        if (!cfg.categories.some((c) => c.id === id)) {
+          return {
+            content: [{ type: "text", text: "可用类别：" + cfg.categories.map((c) => c.id).join(", ") }],
+          };
+        }
+        writeState(stateFile, sessionId, { ...st, category: id });
+        const d = decide("tool:ladder_mount:category", id);
+        apply(d, "模型切换类别");
+        record({ trigger: "ladder_mount", action, names: [id] });
+        return {
+          content: [
+            { type: "text", text: `已切到类别 ${id}。当前挂载(${d.mounted.length}): ${d.mounted.join(", ")}` },
+          ],
+        };
+      }
+
       const names = (query ?? "").split(",").map((s) => s.trim()).filter(Boolean);
       if (!names.length) return { content: [{ type: "text", text: "请给出工具名（逗号分隔）" }] };
       const missing: string[] = [];
+      const locked: string[] = [];
       for (const n of names) {
         const t = tools.find((x) => x.name === n);
         if (!t) {
@@ -286,19 +308,37 @@ export default function toolLadder(pi: ExtensionAPI): void {
           continue;
         }
         if (action === "mount") extra.add(n);
+        else if (cfg.alwaysOn.includes(n)) locked.push(n);
         else extra.delete(n);
       }
       writeState(stateFile, sessionId, { ...st, extra: [...extra] });
       const d = decide("tool:ladder_mount", lastDecision?.category ?? cfg.fallbackCategory);
       apply(d, "ladder_mount " + action);
       record({ trigger: "ladder_mount", action, names });
+
+      // 必须明确回报"谁没挂上、为什么"：否则模型会反复重试同一个动作
+      //（实测有模型连挂 18 次，因为返回值只说"完成"）
+      const notMounted =
+        action === "mount" ? names.filter((n) => !d.mounted.includes(n) && !missing.includes(n)) : [];
+      const why = notMounted.map((n) => {
+        const t = tools.find((x) => x.name === n);
+        const reason = d.dropped.find((x) => x.name === n)?.reason ?? "被类别占用挤掉";
+        return `${n}（${t?.chars ?? "?"} 字符）：${reason}`;
+      });
+      const advice = notMounted.length
+        ? "\n\n挂不上就是挂不上，请勿重复挂同一工具。可改用：① action=category 切到该工具所属类别；" +
+          "② 先 unmount 类别内工具腾预算；③ 用已挂载的工具替代完成，或直接告诉用户为何做不到。"
+        : "";
       return {
         content: [
           {
             type: "text",
             text:
               `${action} 完成。当前挂载(${d.mounted.length}): ${d.mounted.join(", ")}` +
-              (missing.length ? `\n不存在的工具：${missing.join(", ")}` : ""),
+              (missing.length ? `\n不存在的工具：${missing.join(", ")}` : "") +
+              (locked.length ? `\n受保护（alwaysOn）不可卸下：${locked.join(", ")}` : "") +
+              (why.length ? `\n没挂上的：\n- ${why.join("\n- ")}` : "") +
+              advice,
           },
         ],
       };

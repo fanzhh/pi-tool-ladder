@@ -35,6 +35,27 @@
   state 记录了该请求，但**没挂上**；提示词仍是 8 个工具 / 8,973 字符，没有破预算。
   同一轮里更小的同类工具（`subagent_supervisor` 466、`subagent_wait` 2,047）照常挂上。
 
+### 测评发现与加固（2026-10-17）
+
+三套评测脚本：`eval/offline-eval.ts`（离线确定性）、`eval/ab-local.sh`（本地 A/B）、`eval/misroute.sh`（误分类恢复）。
+
+评测发现的两个缺口，**已修一个、待修一个**：
+
+1. **已修**：模型拿不到工具时会剧烈空转。修复前实测：误分类后要 `subagent`（超预算）→ 连调
+   `ladder_mount` **18 次**（挂/卸反复、试 `codemode` 沙箱与 `tool_search` 顶替），约 30 次 provider 请求，
+   最终反问用户。原因就是 `ladder_mount` 返回值只说「完成」。加固三件事：
+   - 返回值明确写「谁没挂上、为什么（字符数 vs 预算）、请勿重试」，并给替代路径；
+   - `alwaysOn` 工具拒绝被 `unmount`；
+   - 新增 `action=category`，模型可自己换类别（等价 `/cat`）。
+   修复后同样的失败场景：**18 次 → 3 次**调用，且模型**主动用了新的 category 逃生口**，最后用 `read` 把活干完
+   并说明原因。
+2. **待修**：`categories[].patterns` 的**顺序目前不生效**——`planMount` 按工具注册顺序切片，
+   不是按 `patterns` 顺序取。导致 `fs` 类别里 `write` 被 `maxTools=6` 挤掉（覆盖度实测 15 项里缺
+   `write`、`subagent`、`js`）。修法：按 `patterns` 逐条展开匹配再切片。
+
+其余实测结论（提示词体量 96.3% 压缩、本地墙钟 2.3×/8.2×、分类 15/15、决策 0.09ms）见
+`2026-10-17-pi-tool-ladder-review-vs-vanilla-pi.md`。
+
 ### E2E
 
 - `bash e2e/run.sh`：真跑 11 次 pi 会话，产物 `e2e/out/report.md` + `report.json`，断言失败返回非 0。

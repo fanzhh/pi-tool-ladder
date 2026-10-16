@@ -1,0 +1,4 @@
+{"label": "A-original-real", "wall_s": 169.8, "dir": "/tmp/pi-tool-ladder-ab/A-original-real"}
+{"label": "B-original-storm", "wall_s": 502.5, "dir": "/tmp/pi-tool-ladder-ab/B-original-storm"}
+{"label": "C-ladder-real", "wall_s": 73.1, "dir": "/tmp/pi-tool-ladder-ab/C-ladder-real", "category": "general", "routedBy": "fallback", "mounted": 5, "payloadTools": 5}
+{"label": "D-ladder-storm", "wall_s": 61.5, "dir": "/tmp/pi-tool-ladder-ab/D-ladder-storm", "category": "general", "routedBy": "fallback", "mounted": 5, "payloadTools": 5}

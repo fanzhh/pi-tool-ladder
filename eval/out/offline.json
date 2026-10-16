@@ -1,0 +1,326 @@
+{
+  "inventory": {
+    "source": "/tmp/pi-tool-ladder-e2e/control/sessions",
+    "tools": 189,
+    "chars": 190160
+  },
+  "buckets": {
+    "fs": 9,
+    "web": 4,
+    "mcp": 2,
+    "agent": 4,
+    "general": 2
+  },
+  "unbucketed": 168,
+  "classify": {
+    "accuracy": 1,
+    "scored": 15,
+    "ambiguous": 1,
+    "cases": [
+      {
+        "text": "帮我搜一下这个网页里写了什么",
+        "expect": "web",
+        "actual": "web",
+        "hits": [
+          "搜一下",
+          "网页"
+        ],
+        "ok": true,
+        "us": 110
+      },
+      {
+        "text": "联网查一下这个网址的内容",
+        "expect": "web",
+        "actual": "web",
+        "hits": [
+          "联网",
+          "网址"
+        ],
+        "ok": true,
+        "us": 12.417
+      },
+      {
+        "text": "搜索一下 GMP 附录的最新版本",
+        "expect": "web",
+        "actual": "web",
+        "hits": [
+          "搜索"
+        ],
+        "ok": true,
+        "us": 12.75
+      },
+      {
+        "text": "读一下这个文件，把配置改一下",
+        "expect": "fs",
+        "actual": "fs",
+        "hits": [
+          "文件"
+        ],
+        "ok": true,
+        "us": 16.292
+      },
+      {
+        "text": "跑一下这个脚本，看看报错",
+        "expect": "fs",
+        "actual": "fs",
+        "hits": [
+          "脚本",
+          "报错"
+        ],
+        "ok": true,
+        "us": 10
+      },
+      {
+        "text": "这个 repo 的目录结构是什么",
+        "expect": "fs",
+        "actual": "fs",
+        "hits": [
+          "目录",
+          "repo"
+        ],
+        "ok": true,
+        "us": 8.333
+      },
+      {
+        "text": "这段代码哪里有问题",
+        "expect": "fs",
+        "actual": "fs",
+        "hits": [
+          "代码"
+        ],
+        "ok": true,
+        "us": 6.833
+      },
+      {
+        "text": "帮我重构这个模块",
+        "expect": "fs",
+        "actual": "fs",
+        "hits": [
+          "重构"
+        ],
+        "ok": true,
+        "us": 6.792
+      },
+      {
+        "text": "读一下这个报错日志",
+        "expect": "fs",
+        "actual": "fs",
+        "hits": [
+          "报错"
+        ],
+        "ok": true,
+        "us": 6.834
+      },
+      {
+        "text": "下载网页内容存到本地文件里",
+        "expect": "",
+        "actual": "web",
+        "hits": [
+          "网页",
+          "下载网页"
+        ],
+        "ok": null,
+        "us": 7.333
+      },
+      {
+        "text": "调用 mcp 的浏览器服务截个图",
+        "expect": "mcp",
+        "actual": "mcp",
+        "hits": [
+          "mcp",
+          "浏览器"
+        ],
+        "ok": true,
+        "us": 7
+      },
+      {
+        "text": "开三个子智能体并行干活",
+        "expect": "agent",
+        "actual": "agent",
+        "hits": [
+          "子智能体",
+          "并行"
+        ],
+        "ok": true,
+        "us": 9.375
+      },
+      {
+        "text": "把这件事委派给 subagent 去做",
+        "expect": "agent",
+        "actual": "agent",
+        "hits": [
+          "委派",
+          "subagent",
+          "agent"
+        ],
+        "ok": true,
+        "us": 7.583
+      },
+      {
+        "text": "今天几号",
+        "expect": "general",
+        "actual": "general",
+        "hits": [],
+        "ok": true,
+        "us": 25.042
+      },
+      {
+        "text": "只回两个字：收到",
+        "expect": "general",
+        "actual": "general",
+        "hits": [],
+        "ok": true,
+        "us": 9.916
+      },
+      {
+        "text": "42",
+        "expect": "general",
+        "actual": "general",
+        "hits": [],
+        "ok": true,
+        "us": 11.375
+      }
+    ]
+  },
+  "coverage": [
+    {
+      "task": "读文件内容",
+      "needs": "read",
+      "right": "fs",
+      "okRight": true,
+      "wrongCat": "web",
+      "okWrong": true,
+      "reason": ""
+    },
+    {
+      "task": "改文件里的配置",
+      "needs": "edit",
+      "right": "fs",
+      "okRight": true,
+      "wrongCat": "web",
+      "okWrong": false,
+      "reason": ""
+    },
+    {
+      "task": "写一个新文件",
+      "needs": "write",
+      "right": "fs",
+      "okRight": false,
+      "wrongCat": "web",
+      "okWrong": false,
+      "reason": "未在任何类别（需 ladder_mount 显式挂载）"
+    },
+    {
+      "task": "跑一条命令",
+      "needs": "bash",
+      "right": "fs",
+      "okRight": true,
+      "wrongCat": "web",
+      "okWrong": false,
+      "reason": ""
+    },
+    {
+      "task": "按名字找文件",
+      "needs": "find_files",
+      "right": "fs",
+      "okRight": true,
+      "wrongCat": "web",
+      "okWrong": false,
+      "reason": ""
+    },
+    {
+      "task": "在仓库里搜字符串",
+      "needs": "grep",
+      "right": "fs",
+      "okRight": true,
+      "wrongCat": "web",
+      "okWrong": false,
+      "reason": ""
+    },
+    {
+      "task": "联网搜索",
+      "needs": "web_search",
+      "right": "web",
+      "okRight": true,
+      "wrongCat": "fs",
+      "okWrong": false,
+      "reason": ""
+    },
+    {
+      "task": "抓网页正文",
+      "needs": "fetch_content",
+      "right": "web",
+      "okRight": true,
+      "wrongCat": "fs",
+      "okWrong": false,
+      "reason": ""
+    },
+    {
+      "task": "核对来源",
+      "needs": "source_check",
+      "right": "web",
+      "okRight": true,
+      "wrongCat": "fs",
+      "okWrong": false,
+      "reason": ""
+    },
+    {
+      "task": "操作 MCP 浏览器",
+      "needs": "mcp",
+      "right": "mcp",
+      "okRight": true,
+      "wrongCat": "fs",
+      "okWrong": false,
+      "reason": ""
+    },
+    {
+      "task": "跑 MCP 脚本",
+      "needs": "mcp_script",
+      "right": "mcp",
+      "okRight": true,
+      "wrongCat": "fs",
+      "okWrong": false,
+      "reason": ""
+    },
+    {
+      "task": "派子智能体",
+      "needs": "subagent",
+      "right": "agent",
+      "okRight": false,
+      "wrongCat": "fs",
+      "okWrong": false,
+      "reason": "超出 maxSchemaChars=14000"
+    },
+    {
+      "task": "等子智能体结果",
+      "needs": "subagent_wait",
+      "right": "agent",
+      "okRight": true,
+      "wrongCat": "fs",
+      "okWrong": false,
+      "reason": ""
+    },
+    {
+      "task": "跟子智能体通信",
+      "needs": "intercom",
+      "right": "agent",
+      "okRight": true,
+      "wrongCat": "fs",
+      "okWrong": false,
+      "reason": ""
+    },
+    {
+      "task": "跑 JS 片段",
+      "needs": "js",
+      "right": "general",
+      "okRight": false,
+      "wrongCat": "fs",
+      "okWrong": true,
+      "reason": "未在任何类别（需 ladder_mount 显式挂载）"
+    }
+  ],
+  "overhead": {
+    "perDecisionMs": 0.087816875,
+    "iterations": 200
+  }
+}
