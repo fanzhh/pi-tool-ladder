@@ -138,6 +138,23 @@ for (const c of cases) {
       `本轮挂载：${(last?.mounted ?? []).join(", ")}`,
     );
   }
+  if (c.name.includes("budget-absolute")) {
+    // 预算绝对优先：显式挂 subagent（26,555 字符 > 预算）必须被丢弃
+    const huge = "subagent";
+    check(`超大工具已请求挂载：${huge}`, stateExtras.includes(huge), `state：${stateExtras.join(", ") || "空"}`);
+    check(
+      `预算绝对优先：${huge} 未被挂上`,
+      !(last?.mounted ?? []).includes(huge),
+      `本轮挂载：${(last?.mounted ?? []).join(", ")}`,
+    );
+    if (sys) {
+      check(
+        `进提示词的 schema 仍 ≤ ${c.budgetChars}`,
+        sys.chars <= c.budgetChars,
+        `实际 ${sys.chars} 字符（超大工具没有破预算）`,
+      );
+    }
+  }
 
   results.push({
     case: c.name,

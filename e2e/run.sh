@@ -85,6 +85,12 @@ PROMPT="再回两个字：收到"
 run on-demand-2 -e "$EXT_LADDER" -c
 CASEDIR="" SESSDIR=""
 
+echo "### 8 预算绝对优先：显式挂一个超大工具（subagent，26,555 字符）"
+CASEDIR="$WORK/budget-absolute" SESSDIR="$WORK/budget-absolute/sessions"
+PROMPT="请调用 ladder_mount 工具，action=mount，query=subagent，然后回两个字：完成"
+run budget-absolute-1 -e "$EXT_LADDER"
+CASEDIR="" SESSDIR=""
+
 node "$PROJ/e2e/report.mjs" \
   "control:$WORK/control/sessions:*:0:0" \
   "storm:$WORK/storm/sessions:*:12:14000" \
@@ -93,4 +99,5 @@ node "$PROJ/e2e/report.mjs" \
   "fallback:$WORK/fallback/sessions:general:12:14000" \
   "sticky-2:$WORK/sticky/sessions:web:12:14000" \
   "on-demand-1:$WORK/on-demand/sessions:*:12:14000" \
-  "on-demand-2:$WORK/on-demand/sessions:*:12:14000"
+  "on-demand-2:$WORK/on-demand/sessions:*:12:14000" \
+  "budget-absolute-1:$WORK/budget-absolute/sessions:*:12:14000"

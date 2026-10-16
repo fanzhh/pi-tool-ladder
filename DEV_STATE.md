@@ -26,9 +26,21 @@
 - 挂载 5 个工具 / 4,438 字符（预算 12 工具 / 14,000 字符），压掉 175 个。
 - 载荷层：原 7 个工具 / 7,050 字符 → 收紧为 5 个 / 4,599 字符。
 
+### 设计决定：预算绝对优先（2026-10-16，用户拍板）
+
+- `maxTools` / `maxSchemaChars` 不可被任何请求突破，**包括 `ladder_mount` 显式挂载的大工具**。
+- 装入顺序即优先级：alwaysOn → 阶梯控制工具 → 按需挂载 → 类别自动填充 → 未归桶；超预算的从后往前丢，
+  记入 `dropped`，显式挂载被丢时原因写明"预算绝对优先"。
+- 实测（E2E 用例 `budget-absolute`）：让模型显式挂 `subagent`（26,555 字符 > 预算 14,000）→
+  state 记录了该请求，但**没挂上**；提示词仍是 8 个工具 / 8,973 字符，没有破预算。
+  同一轮里更小的同类工具（`subagent_supervisor` 466、`subagent_wait` 2,047）照常挂上。
+
 ### E2E
 
-- `bash e2e/run.sh`：真跑 8 次 pi 会话，产物 `e2e/out/report.md` + `report.json`，断言失败返回非 0。
+- `bash e2e/run.sh`：真跑 11 次 pi 会话，产物 `e2e/out/report.md` + `report.json`，断言失败返回非 0。
+  2026-10-16 最近一次：**全部通过（EXIT=0）**。
 - 踩坑 1：函数参数里把 `-e /path` 包成一个字符串 → pi 报 `Unknown option` 且不写 session 文件；必须拆成独立参数。
 - 踩坑 2：提示词含空格，必须整体作为一个参数传。
 - 踩坑 3：`session_start` 里若把兜底类别写进 state，首句提示词的关键词路由永远不生效；只应用不落盘。
+- 踩坑 4：会话标识若用 `Date.now()`，跨进程粘性与按需挂载全失效；改用 `ctx.sessionManager.getSessionFile()`。
+- 踩坑 5：多轮用例必须共用同一个 cwd，否则阶梯的 state/log 分家。

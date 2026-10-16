@@ -131,13 +131,22 @@ export function planMount(
     if (!mounted.includes(name)) mounted.push(name);
   };
 
-  // 显式指定的一律保留：alwaysOn、阶梯控制工具、按需挂载。它们代表明确的意图，
-  // 不能被字符预算悄悄丢掉；预算只用来裁剪"类别自动填充"的部分。
-  const explicit: string[] = [];
-  for (const n of cfg.alwaysOn) push(n, "alwaysOn");
-  for (const n of cfg.controlTools) push(n, "阶梯控制工具");
-  for (const n of extra) push(n, "按需挂载");
-  explicit.push(...mounted);
+  // 顺序即优先级：先 alwaysOn，再阶梯控制工具，再按需挂载，最后才是类别自动填充与未归桶。
+  // 但**预算绝对优先**：没有任何一项能突破 maxTools / maxSchemaChars，包含显式挂载。
+  // 想要某工具进来，就得先腾地方（减类别、缩预算内的其它工具），不能靠"显式"越权。
+  const explicit = new Set<string>();
+  for (const n of cfg.alwaysOn) {
+    push(n, "alwaysOn");
+    explicit.add(n);
+  }
+  for (const n of cfg.controlTools) {
+    push(n, "阶梯控制工具");
+    explicit.add(n);
+  }
+  for (const n of extra) {
+    push(n, "按需挂载");
+    explicit.add(n);
+  }
 
   if (cat) {
     for (const n of (buckets[cat.id] ?? []).slice(0, cat.maxTools)) push(n, "类别 " + cat.id);
@@ -157,7 +166,7 @@ export function planMount(
   for (const n of mounted.slice(withinCount.length)) {
     dropped.push({
       name: n,
-      reason: explicit.includes(n) ? "超出 maxTools（显式挂载）" : "超出 maxTools=" + cfg.budget.maxTools,
+      reason: "超出 maxTools=" + cfg.budget.maxTools + (explicit.has(n) ? "（显式挂载同样受限）" : ""),
     });
   }
 
@@ -165,8 +174,13 @@ export function planMount(
   let used = 0;
   for (const n of withinCount) {
     const size = byName.get(n)?.chars ?? 0;
-    if (used + size > cfg.budget.maxSchemaChars && kept.length > 0 && !explicit.includes(n)) {
-      dropped.push({ name: n, reason: "超出 maxSchemaChars=" + cfg.budget.maxSchemaChars });
+    if (used + size > cfg.budget.maxSchemaChars && kept.length > 0) {
+      dropped.push({
+        name: n,
+        reason:
+          (explicit.has(n) ? "预算绝对优先：显式挂载也超 maxSchemaChars=" : "超出 maxSchemaChars=") +
+          cfg.budget.maxSchemaChars,
+      });
       continue;
     }
     kept.push(n);
