@@ -1,0 +1,278 @@
+{
+  "laya": "http://127.0.0.1:9400/v1/systemone",
+  "offline": "eval/out/offline.json",
+  "rows": [
+    {
+      "prompt": "帮我搜一下这个网页里写了什么",
+      "expect": "web",
+      "keyword": "web",
+      "systemone": "web",
+      "confidence": 0.9978,
+      "probs": {
+        "fs": 0.0003,
+        "web": 0.9996,
+        "mcp": 0.0,
+        "agent": 0.0,
+        "general": 0.0
+      },
+      "ms": 55.88936805725098,
+      "lowConf": null
+    },
+    {
+      "prompt": "联网查一下这个网址的内容",
+      "expect": "web",
+      "keyword": "web",
+      "systemone": "web",
+      "confidence": 0.9978,
+      "probs": {
+        "fs": 0.0001,
+        "web": 0.9996,
+        "mcp": 0.0001,
+        "agent": 0.0001,
+        "general": 0.0
+      },
+      "ms": 37.21499443054199,
+      "lowConf": null
+    },
+    {
+      "prompt": "搜索一下 GMP 附录的最新版本",
+      "expect": "web",
+      "keyword": "web",
+      "systemone": "fs",
+      "confidence": 0.4247,
+      "probs": {
+        "fs": 0.6733,
+        "web": 0.1868,
+        "mcp": 0.1152,
+        "agent": 0.0016,
+        "general": 0.023
+      },
+      "ms": 36.859989166259766,
+      "lowConf": "fs"
+    },
+    {
+      "prompt": "读一下这个文件，把配置改一下",
+      "expect": "fs",
+      "keyword": "fs",
+      "systemone": "fs",
+      "confidence": 0.9996,
+      "probs": {
+        "fs": 0.9999,
+        "web": 0.0,
+        "mcp": 0.0,
+        "agent": 0.0,
+        "general": 0.0
+      },
+      "ms": 39.10493850708008,
+      "lowConf": null
+    },
+    {
+      "prompt": "跑一下这个脚本，看看报错",
+      "expect": "fs",
+      "keyword": "fs",
+      "systemone": "fs",
+      "confidence": 0.2548,
+      "probs": {
+        "fs": 0.5836,
+        "web": 0.0266,
+        "mcp": 0.1003,
+        "agent": 0.1293,
+        "general": 0.1603
+      },
+      "ms": 36.646127700805664,
+      "lowConf": "fs"
+    },
+    {
+      "prompt": "这个 repo 的目录结构是什么",
+      "expect": "fs",
+      "keyword": "fs",
+      "systemone": "fs",
+      "confidence": 0.8675,
+      "probs": {
+        "fs": 0.9592,
+        "web": 0.0064,
+        "mcp": 0.0102,
+        "agent": 0.0011,
+        "general": 0.0232
+      },
+      "ms": 51.68581008911133,
+      "lowConf": null
+    },
+    {
+      "prompt": "这段代码哪里有问题",
+      "expect": "fs",
+      "keyword": "fs",
+      "systemone": "fs",
+      "confidence": 0.5796,
+      "probs": {
+        "fs": 0.816,
+        "web": 0.1054,
+        "mcp": 0.03,
+        "agent": 0.0077,
+        "general": 0.041
+      },
+      "ms": 37.042856216430664,
+      "lowConf": null
+    },
+    {
+      "prompt": "帮我重构这个模块",
+      "expect": "fs",
+      "keyword": "fs",
+      "systemone": "fs",
+      "confidence": 0.7696,
+      "probs": {
+        "fs": 0.9167,
+        "web": 0.0042,
+        "mcp": 0.0467,
+        "agent": 0.0051,
+        "general": 0.0273
+      },
+      "ms": 38.416147232055664,
+      "lowConf": null
+    },
+    {
+      "prompt": "读一下这个报错日志",
+      "expect": "fs",
+      "keyword": "fs",
+      "systemone": "fs",
+      "confidence": 0.1541,
+      "probs": {
+        "fs": 0.3586,
+        "web": 0.0321,
+        "mcp": 0.2015,
+        "agent": 0.075,
+        "general": 0.3328
+      },
+      "ms": 48.5529899597168,
+      "lowConf": "fs"
+    },
+    {
+      "prompt": "下载网页内容存到本地文件里",
+      "expect": "",
+      "keyword": "web",
+      "systemone": "web",
+      "confidence": 0.8307,
+      "probs": {
+        "fs": 0.0688,
+        "web": 0.9284,
+        "mcp": 0.0011,
+        "agent": 0.0004,
+        "general": 0.0013
+      },
+      "ms": 46.797990798950195,
+      "lowConf": null
+    },
+    {
+      "prompt": "调用 mcp 的浏览器服务截个图",
+      "expect": "mcp",
+      "keyword": "mcp",
+      "systemone": "mcp",
+      "confidence": 0.9949,
+      "probs": {
+        "fs": 0.0001,
+        "web": 0.0001,
+        "mcp": 0.9991,
+        "agent": 0.0005,
+        "general": 0.0002
+      },
+      "ms": 41.73707962036133,
+      "lowConf": null
+    },
+    {
+      "prompt": "开三个子智能体并行干活",
+      "expect": "agent",
+      "keyword": "agent",
+      "systemone": "mcp",
+      "confidence": 0.4631,
+      "probs": {
+        "fs": 0.0107,
+        "web": 0.0138,
+        "mcp": 0.5811,
+        "agent": 0.3761,
+        "general": 0.0184
+      },
+      "ms": 37.32419013977051,
+      "lowConf": "mcp"
+    },
+    {
+      "prompt": "把这件事委派给 subagent 去做",
+      "expect": "agent",
+      "keyword": "agent",
+      "systemone": "agent",
+      "confidence": 0.9922,
+      "probs": {
+        "fs": 0.0001,
+        "web": 0.0001,
+        "mcp": 0.0005,
+        "agent": 0.9985,
+        "general": 0.0008
+      },
+      "ms": 37.966251373291016,
+      "lowConf": null
+    },
+    {
+      "prompt": "今天几号",
+      "expect": "general",
+      "keyword": "general",
+      "systemone": "general",
+      "confidence": 0.6203,
+      "probs": {
+        "fs": 0.0151,
+        "web": 0.041,
+        "mcp": 0.0311,
+        "agent": 0.0617,
+        "general": 0.8511
+      },
+      "ms": 38.49506378173828,
+      "lowConf": null
+    },
+    {
+      "prompt": "只回两个字：收到",
+      "expect": "general",
+      "keyword": "general",
+      "systemone": "general",
+      "confidence": 0.4583,
+      "probs": {
+        "fs": 0.0581,
+        "web": 0.0189,
+        "mcp": 0.1528,
+        "agent": 0.0353,
+        "general": 0.7349
+      },
+      "ms": 40.152788162231445,
+      "lowConf": "general"
+    },
+    {
+      "prompt": "42",
+      "expect": "general",
+      "keyword": "general",
+      "systemone": "general",
+      "confidence": 0.1762,
+      "probs": {
+        "fs": 0.1251,
+        "web": 0.11,
+        "mcp": 0.1185,
+        "agent": 0.1059,
+        "general": 0.5406
+      },
+      "ms": 36.23819351196289,
+      "lowConf": "general"
+    }
+  ],
+  "summary": {
+    "scored": 15,
+    "keyword_right": 15,
+    "systemone_right": 13,
+    "agree": 14,
+    "warm_median_ms": 38.45560550689697,
+    "warm_max_ms": 55.88936805725098,
+    "low_conf": [
+      "搜索一下 GMP 附录的最新版本",
+      "跑一下这个脚本，看看报错",
+      "读一下这个报错日志",
+      "开三个子智能体并行干活",
+      "只回两个字：收到",
+      "42"
+    ]
+  }
+}
