@@ -91,6 +91,57 @@ PROMPT="请调用 ladder_mount 工具，action=mount，query=subagent，然后�
 run budget-absolute-1 -e "$EXT_LADDER"
 CASEDIR="" SESSDIR=""
 
+# ---- 9 System One 路由：真跑三个分支（假端点，不需要本地小模型）----
+# 提示词固定用「帮我搜一下这个网页里写了什么」（关键词判定为 web），
+# 假端点固定回 mcp，这样"采信端点"和"回退关键词"两种结果一眼可分。
+SO_PORT=9415
+so_start() {
+  python3 "$PROJ/e2e/fake-systemone.py" --port "$SO_PORT" "$@" > "$WORK/fake-systemone.log" 2>&1 &
+  SO_PID=$!
+  for _ in $(seq 1 25); do
+    curl -s -m 1 "http://127.0.0.1:$SO_PORT/health" >/dev/null 2>&1 && return 0
+    sleep 0.2
+  done
+  echo "!!! 假端点未就绪（$SO_PORT）"
+  return 1
+}
+so_stop() {
+  [ -n "${SO_PID:-}" ] && kill "$SO_PID" 2>/dev/null
+  wait "$SO_PID" 2>/dev/null
+  SO_PID=""
+}
+so_case() { # so_case <用例名> <端点URL>
+  local name="$1" url="$2"
+  mkdir -p "$WORK/$name"
+  printf '{"router":{"mode":"systemone","classifyEndpoint":"%s","confidenceFloor":0.5,"timeoutMs":2500}}\n' "$url" \
+    > "$WORK/$name/.pi-tool-ladder.json"
+}
+
+echo "### 9a System One 正常：采信端点判定"
+so_case so-ok "http://127.0.0.1:$SO_PORT/v1/systemone"
+so_start --choice mcp --confidence 0.99
+CASEDIR="$WORK/so-ok" SESSDIR=""
+PROMPT="帮我搜一下这个网页里写了什么"
+run so-ok -e "$EXT_LADDER"
+CASEDIR="" SESSDIR=""
+so_stop
+
+echo "### 9b System One 低置信度：必须回退关键词"
+so_case so-lowconf "http://127.0.0.1:$SO_PORT/v1/systemone"
+so_start --choice mcp --confidence 0.2
+CASEDIR="$WORK/so-lowconf" SESSDIR=""
+PROMPT="帮我搜一下这个网页里写了什么"
+run so-lowconf -e "$EXT_LADDER"
+CASEDIR="" SESSDIR=""
+so_stop
+
+echo "### 9c System One 端点不通：必须回退关键词"
+so_case so-down "http://127.0.0.1:9416/v1/systemone"
+CASEDIR="$WORK/so-down" SESSDIR=""
+PROMPT="帮我搜一下这个网页里写了什么"
+run so-down -e "$EXT_LADDER"
+CASEDIR="" SESSDIR=""
+
 node "$PROJ/e2e/report.mjs" \
   "control:$WORK/control/sessions:*:0:0" \
   "storm:$WORK/storm/sessions:*:12:14000" \
@@ -100,4 +151,7 @@ node "$PROJ/e2e/report.mjs" \
   "sticky-2:$WORK/sticky/sessions:web:12:14000" \
   "on-demand-1:$WORK/on-demand/sessions:*:12:14000" \
   "on-demand-2:$WORK/on-demand/sessions:*:12:14000" \
-  "budget-absolute-1:$WORK/budget-absolute/sessions:*:12:14000"
+  "budget-absolute-1:$WORK/budget-absolute/sessions:*:12:14000" \
+  "so-ok:$WORK/so-ok/sessions:mcp:12:14000:systemone" \
+  "so-lowconf:$WORK/so-lowconf/sessions:web:12:14000:keyword" \
+  "so-down:$WORK/so-down/sessions:web:12:14000:keyword"

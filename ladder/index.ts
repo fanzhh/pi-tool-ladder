@@ -18,10 +18,14 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   DEFAULT_BUDGET,
+  SYSTEMONE_DEFAULT_FLOOR,
+  SYSTEMONE_DEFAULT_TIMEOUT_MS,
   bucketTools,
+  buildSystemOneRequest,
   classifyByKeywords,
   hashConfig,
   mergeConfig,
+  parseSystemOneResponse,
   planMount,
   type Decision,
   type LadderConfig,
@@ -141,7 +145,32 @@ export default function toolLadder(pi: ExtensionAPI): void {
     return d;
   };
 
-  const pickCategory = (prompt: string): { category: string; routedBy: string; score: number } => {
+  // ---------- 类别判定：关键词（默认）或本地 System One（可选，带置信度门） ----------
+  type SoResult = { category: string; confidence: number; ms: number } | { error: string };
+
+  const classifyBySystemOne = async (prompt: string): Promise<SoResult> => {
+    const timeout = cfg.router.timeoutMs ?? SYSTEMONE_DEFAULT_TIMEOUT_MS;
+    const t0 = Date.now();
+    try {
+      const res = await fetch(cfg.router.classifyEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildSystemOneRequest(prompt, cfg)),
+        signal: AbortSignal.timeout(timeout),
+      });
+      if (!res.ok) return { error: "HTTP " + res.status };
+      const parsed = parseSystemOneResponse(await res.json(), cfg);
+      if (!parsed) return { error: "返回里没有可用的类别" };
+      return { category: parsed.category, confidence: parsed.confidence, ms: Date.now() - t0 };
+    } catch (e) {
+      const name = (e as Error)?.name;
+      return { error: name === "TimeoutError" ? `超时 ${timeout}ms` : name || String(e) };
+    }
+  };
+
+  const pickCategory = async (
+    prompt: string,
+  ): Promise<{ category: string; routedBy: string; score: number; note?: string }> => {
     const env = process.env.PI_LADDER_CATEGORY;
     if (env) return { category: env, routedBy: "env:PI_LADDER_CATEGORY", score: 0 };
 
@@ -150,6 +179,25 @@ export default function toolLadder(pi: ExtensionAPI): void {
     if (st.category && known && cfg.router.sticky === "session") {
       return { category: st.category, routedBy: "sticky:session", score: 0 };
     }
+
+    // 小模型只在这个会话还没有类别时问一次（问完就粘住，不破坏前缀缓存）。
+    // 任何异常、超时、低置信度都回退关键词——路由挂掉不能让 Pi 不能用。
+    if (cfg.router.mode === "systemone" && cfg.router.classifyEndpoint) {
+      const floor = cfg.router.confidenceFloor ?? SYSTEMONE_DEFAULT_FLOOR;
+      const so = await classifyBySystemOne(prompt || "");
+      if (!("error" in so) && so.confidence >= floor) {
+        return {
+          category: so.category,
+          routedBy: "systemone",
+          score: so.confidence,
+          note: `置信度 ${so.confidence.toFixed(3)} / ${so.ms}ms`,
+        };
+      }
+      const why = "error" in so ? `端点不可用（${so.error}）` : `置信度 ${so.confidence.toFixed(3)} < ${floor}`;
+      const cls = classifyByKeywords(prompt || "", cfg);
+      return { category: cls.category, routedBy: "keyword", score: cls.score, note: `systemone 未采信：${why}` };
+    }
+
     const cls = classifyByKeywords(prompt || "", cfg);
     if (cfg.router.sticky === "keyword" && known) {
       // 关键词模式：新类别得分更高才切，避免来回抖动
@@ -402,15 +450,16 @@ export default function toolLadder(pi: ExtensionAPI): void {
   pi.on("before_agent_start", async (event, ctx) => {
     refreshSessionId(ctx);
     const prompt = (event as { prompt?: string }).prompt ?? "";
-    const picked = pickCategory(prompt);
+    const picked = await pickCategory(prompt);
     const d = decide(picked.routedBy, picked.category, picked.score);
     const before = pi.getActiveTools().length;
     apply(d, `prompt=${lastPromptChars}字符`);
-    if (before !== d.mounted.length) {
+    if (before !== d.mounted.length || picked.note) {
       record({
         trigger: "before_agent_start",
         changed: `${before}->${d.mounted.length}`,
         keywordHits: pendingCategory?.hits ?? [],
+        routerNote: picked.note ?? null,
       });
     }
     writeState(stateFile, sessionId, { ...readState(stateFile, sessionId), category: d.category });

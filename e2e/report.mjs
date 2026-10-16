@@ -54,7 +54,7 @@ function ladderRecords(dir) {
 }
 
 const cases = process.argv.slice(2).map((spec) => {
-  const [name, dir, expectCategory, budgetTools, budgetChars] = spec.split(":");
+  const [name, dir, expectCategory, budgetTools, budgetChars, expectRoutedBy] = spec.split(":");
   // spec 里的 dir 通常是 sessions 目录；阶梯的日志/状态写在它的上一级
   const caseDir = dir.endsWith("/sessions") ? dirname(dir) : dir;
   return {
@@ -64,6 +64,7 @@ const cases = process.argv.slice(2).map((spec) => {
     expectCategory,
     budgetTools: Number(budgetTools),
     budgetChars: Number(budgetChars),
+    expectRoutedBy: expectRoutedBy || "",
   };
 });
 
@@ -122,12 +123,27 @@ for (const c of cases) {
       `载荷最多 ${maxPayloadTools} 个 / ${maxPayloadChars} 字符`,
     );
   }
+  // so-* 用例测的是"本轮路由怎么决定的"，取第一条 before_agent_start 记录；
+  // 其他用例沿用最后一条（模型可能在轮中自行换类别，那是它自己的动作）。
+  const routeRec = c.name.startsWith("so-") ? (recs.find((r) => r.trigger === "before_agent_start") ?? last) : last;
   if (c.expectCategory && c.expectCategory !== "*") {
     check(
       `类别判定为 ${c.expectCategory}`,
-      last?.category === c.expectCategory,
-      `实际 ${last?.category}（依据 ${last?.routedBy}）`,
+      routeRec?.category === c.expectCategory,
+      `实际 ${routeRec?.category}（依据 ${routeRec?.routedBy}）`,
     );
+  }
+  if (c.expectRoutedBy) {
+    check(
+      `判定依据为 ${c.expectRoutedBy}`,
+      String(routeRec?.routedBy ?? "").startsWith(c.expectRoutedBy),
+      `实际 ${routeRec?.routedBy}｜${routeRec?.routerNote ?? ""}`,
+    );
+  }
+  if (c.name === "so-lowconf" || c.name === "so-down") {
+    const noteRec = recs.filter((r) => r.routerNote).pop();
+    const want = c.name === "so-lowconf" ? "置信度" : "端点不可用";
+    check(`回退原因写进了日志（含「${want}」）`, String(noteRec?.routerNote ?? "").includes(want), `routerNote=${noteRec?.routerNote}`);
   }
   if (c.name.includes("on-demand")) {
     const want = "intercom";

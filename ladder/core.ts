@@ -14,11 +14,24 @@ export interface Category {
   maxTools: number;
 }
 
+export interface RouterConfig {
+  /** "keyword"（默认，确定性、零延迟）或 "systemone"（本地小模型判定，带置信度门）。 */
+  mode: string;
+  /** "session"（默认，会话内粘住不切换）或 "keyword"。 */
+  sticky: string;
+  /** systemone 端点，例如 http://127.0.0.1:9400/v1/systemone；留空则只用关键词。 */
+  classifyEndpoint: string;
+  /** 低于这个置信度就不采信小模型，回退关键词。 */
+  confidenceFloor?: number;
+  /** 单次判定超时（毫秒），超时即回退关键词。 */
+  timeoutMs?: number;
+}
+
 export interface LadderConfig {
   budget: { maxTools: number; maxSchemaChars: number; maxUnbucketed: number };
   alwaysOn: string[];
   controlTools: string[];
-  router: { mode: string; sticky: string; classifyEndpoint: string };
+  router: RouterConfig;
   fallbackCategory: string;
   logPath: string;
   statePath: string;
@@ -44,6 +57,39 @@ export interface Decision {
 }
 
 export const DEFAULT_BUDGET = { maxTools: 12, maxSchemaChars: 14000, maxUnbucketed: 0 };
+
+/** 置信度门：低于它就回退关键词（实测两处误判都落在 0.5 以下）。 */
+export const SYSTEMONE_DEFAULT_FLOOR = 0.5;
+export const SYSTEMONE_DEFAULT_TIMEOUT_MS = 2500;
+
+/** 构造 System One（Laya 风格）的 choice 请求：每个类别做成一个选项。 */
+export function buildSystemOneRequest(prompt: string, cfg: LadderConfig): unknown {
+  const criteria: Record<string, string> = {};
+  for (const c of cfg.categories) {
+    criteria[c.id] = c.label + (c.keywords.length ? "：" + c.keywords.slice(0, 6).join("、") : "");
+  }
+  return {
+    state: { body: prompt },
+    questions: {
+      category: {
+        type: "choice",
+        instructions: "Which tool category should handle this user request?",
+        criteria,
+      },
+    },
+  };
+}
+
+/** 解析返回值：只认配置里存在的类别 id，拿不到就返回 null（调用方回退关键词）。 */
+export function parseSystemOneResponse(
+  body: unknown,
+  cfg: LadderConfig,
+): { category: string; confidence: number } | null {
+  const ans = (body as { answers?: Record<string, { choice?: string; confidence?: number }> })
+    ?.answers?.category;
+  if (!ans?.choice || !cfg.categories.some((c) => c.id === ans.choice)) return null;
+  return { category: ans.choice, confidence: Number(ans.confidence ?? 0) };
+}
 
 /** 极简 glob：支持完全匹配、前缀 `x*`、后缀 `*x`、包含 `*x*`。 */
 export function globMatch(pattern: string, name: string): boolean {

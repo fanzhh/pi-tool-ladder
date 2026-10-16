@@ -9,7 +9,9 @@
   "router": {
     "mode": "keyword",
     "sticky": "session",
-    "classifyEndpoint": ""
+    "classifyEndpoint": "",
+    "confidenceFloor": 0.5,
+    "timeoutMs": 2500
   },
   "fallbackCategory": "general",
   "logPath": ".pi-tool-ladder/log.jsonl",

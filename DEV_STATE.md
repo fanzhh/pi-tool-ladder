@@ -35,7 +35,15 @@
   state 记录了该请求，但**没挂上**；提示词仍是 8 个工具 / 8,973 字符，没有破预算。
   同一轮里更小的同类工具（`subagent_supervisor` 466、`subagent_wait` 2,047）照常挂上。
 
-### 测评发现与加固（2026-10-17）
+### 可选的 System One 判定（2026-10-17）
+
+- 用户要求接本地 System One。实现：`router.mode: "systemone"` + `classifyEndpoint` + `confidenceFloor`（默认 0.5）+ `timeoutMs`（默认 2500）。
+- 三条不变量：**只在会话首轮问一次**（不破坏前缀缓存）；**低置信度回退关键词**；**端点不通/超时/类别不认识一律 fail-open 回退**，原因写进日志的 `routerNote`。
+- 默认仍 `keyword`，现有行为不变；systemone 是可选开关。
+- 对比实测（`eval/systemone-vs-keyword.py`，16 条中文提示）：关键词 15/15（17 µs）；System One 单独 13/15（热态中位 38 ms）；**门控组合 15/15，其中 9/15 条采信小模型**。两处误判置信度 0.425 / 0.463，均低于 0.5。
+- E2E 新增三个用例（假端点，`e2e/fake-systemone.py`）：采信端点（0.99 → systemone）、低置信度回退（0.2 → keyword）、端点不通回退（→ keyword），并断言回退原因落进日志。
+
+
 
 三套评测脚本：`eval/offline-eval.ts`（离线确定性）、`eval/ab-local.sh`（本地 A/B）、`eval/misroute.sh`（误分类恢复）。
 
